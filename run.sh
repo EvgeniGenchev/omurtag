@@ -1,4 +1,3 @@
 #!/bin/sh
 
-uv tool install . --force
-
+uv cache clean && uv tool uninstall omurtag && uv tool install .

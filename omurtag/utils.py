@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 import logging
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -15,8 +16,9 @@ def create_directory() -> str:
     Raises:
         OSError: If it fails to create a data directory
     """
-    xdg_data_home = os.environ.get('XDG_DATA_HOME',
-                                  str(Path.home() / ".local" / "share"))
+    xdg_data_home = os.environ.get(
+        "XDG_DATA_HOME", str(Path.home() / ".local" / "share")
+    )
     xdg_data = Path(xdg_data_home) / "omurtag"
 
     try:
@@ -26,7 +28,6 @@ def create_directory() -> str:
     except OSError as e:
         logger.error(f"Failed to create data directory {xdg_data}: {e}")
         raise
-
 
 
 def get_data_directory() -> str:
@@ -46,11 +47,15 @@ def get_data_directory() -> str:
         FileNotFoundError: If no data directory is found in any location.
     """
     search_paths = [
-        Path(os.environ.get('XDG_DATA_HOME',
-                          str(Path.home() / ".local" / "share"))) / "omurtag",
+        Path(
+            os.environ.get(
+                "XDG_DATA_HOME", str(Path.home() / ".local" / "share")
+            )
+        )
+        / "omurtag",
         Path.home() / ".omurtag",
         Path("/usr/local/share/omurtag"),
-        Path("/usr/share/omurtag")
+        Path("/usr/share/omurtag"),
     ]
 
     for path in search_paths:
@@ -61,3 +66,35 @@ def get_data_directory() -> str:
     error_msg = "No omurtag data directory found in any search location"
     logger.error(error_msg)
     raise FileNotFoundError(error_msg)
+
+
+def replace_in_files(path: str, replace_dict: dict[str, str]) -> None:
+    """
+    Recursively replaces literal strings in all text files under a directory.
+
+    Returns:
+        None
+    """
+
+    pattern = re.compile("|".join(re.escape(k) for k in replace_dict))
+
+    for file in Path(path).rglob("*"):
+        if not file.is_file():
+            continue
+
+        try:
+            content = file.read_text(encoding="utf-8")
+        except (UnicodeDecodeError, PermissionError):
+            continue
+
+        new_content = pattern.sub(
+            lambda m: replace_dict[m.group(0)],
+            content,
+        )
+
+        if new_content != content:
+            file.write_text(
+                new_content,
+                encoding="utf-8",
+            )
+
