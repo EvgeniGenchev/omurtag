@@ -120,16 +120,6 @@ Create a `config.py` file in one of these locations:
 - `HOME/.omurtag/config.py`
 
 Example `config.py`:
-```python
-templates = [
-    "https://github.com/user/template1_omurtag_template.git",
-    "https://github.com/user/template2_omurtag_template.git",
-]
-```
-
-**URL Shortcuts:**
-
-You can use shortcut notation in your config file:
 
 ```python
 templates = [
