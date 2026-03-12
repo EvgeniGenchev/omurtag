@@ -7,7 +7,6 @@ from os import listdir
 from git import Repo, cmd, exc
 import shutil
 from shutil import copytree, rmtree
-
 from .utils import (
     get_data_directory,
     create_directory,
@@ -20,7 +19,6 @@ from tqdm import TqdmExperimentalWarning
 import warnings
 
 warnings.filterwarnings("ignore", category=TqdmExperimentalWarning)
-
 
 def run(args: Namespace):
     data_directory: str = _ensure_data_directory()
@@ -194,7 +192,6 @@ def _list(args, data_dir: str, print_flag=True):
             print(f"[orange1]{t}[/orange1]")
 
     return templates
-
 
 def _pull(args, data_dir: str, ignore_error=False):
     url = args.link
