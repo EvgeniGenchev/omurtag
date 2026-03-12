@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 import logging
 import re
+import importlib.util as iu
 
 logger = logging.getLogger(__name__)
 
@@ -98,3 +99,60 @@ def replace_in_files(path: str, replace_dict: dict[str, str]) -> None:
                 encoding="utf-8",
             )
 
+
+def config_exist() -> Path | None:
+    """
+    check if the config file exists
+
+    Searches in the following order:
+    1. XDG_CONFIG_HOME/omurtag (XDG compliant user data directory)
+    2. HOME/.omurtag
+
+    Returns
+        Path to the config if found else None
+    """
+
+    search_paths = [
+        Path(os.environ.get("XDG_CONFIG_HOME", (Path.home() / ".config")))
+        / "omurtag"
+        / "config.py",
+        Path.home() / ".omurtag" / "config.py",
+    ]
+
+    for path in search_paths:
+        if path.is_file():
+            logger.debug(f"Found config at {path}")
+            return path
+
+    return None
+
+
+def get_config_file():
+    """
+    Get the configuration for omurtag.
+
+    Searches in the following order:
+    1. XDG_CONFIG_HOME/omurtag (XDG compliant user data directory)
+    2. HOME/.omurtag
+
+    Returns:
+        Path to the first existing data directory found.
+    """
+    path = config_exist()
+    assert path
+
+    spec = iu.spec_from_file_location("config", path)
+    assert spec
+
+    config = iu.module_from_spec(spec)
+    assert config
+
+    loader = spec.loader
+    assert loader
+
+    spec.loader.exec_module(config)  # pyright: ignore
+    try:
+        return config.templates
+    except AttributeError:
+        print("[red] Error in configuration file. `templates` not found![/red]")
+        exit(1)

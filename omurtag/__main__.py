@@ -69,22 +69,27 @@ def main():
     list_parser.add_argument("--verbose", action="store_true")
 
     # -- pull mode --
-    # TODO: need to implement
-    # pull_parser =
-    subparsers.add_parser(
+    pull_parser = subparsers.add_parser(
         "pull",
-        help="[upcoming] Pull a template from a git repository and add it to your local templates",
+        help="Pull a template from a git repository and add it to your local templates",
         formatter_class=RichHelpFormatter,
     )
-    # pull_parser.add_argument("link",
-    #                          type=str,
-    #                          help="The link of the template git repo.")
+    pull_parser.add_argument(
+        "link",
+        type=str,
+        help="The http link of the template git repo.",
+    )
 
-    # -- pull mode --
-    # TODO: need to implement
+    pull_parser.add_argument(
+        "-r",
+        "--recursive",
+        action="store_true",
+    )
+
+    # -- sync mode --
     subparsers.add_parser(
         "sync",
-        help="[upcoming] Downlaod/Update all the template repositories mentioned in the config file.",
+        help="Downlaod/Update all the template repositories mentioned in the config file.",
         formatter_class=RichHelpFormatter,
     )
     args = parser.parse_args()
