@@ -14,6 +14,11 @@ If `omurtag` is not found after installing, run:
 uv tool update-shell
 ```
 
+## Available templates
+
+- [fastapi_fronend](https://github.com/EvgeniGenchev/fastapi_frontend_omurtag_template)
+- [jupyter_notebook](https://github.com/EvgeniGenchev/jupyter_notebook_omurtag_template)
+
 ## Usage
 
 ```bash
