@@ -18,6 +18,7 @@ uv tool update-shell
 
 - [fastapi_fronend](https://github.com/EvgeniGenchev/fastapi_frontend_omurtag_template)
 - [jupyter_notebook](https://github.com/EvgeniGenchev/jupyter_notebook_omurtag_template)
+- [typist_coursework](https://github.com/grexdin/typst_coursework_omurtag_template)
 
 ## Usage
 
