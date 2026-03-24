@@ -75,6 +75,15 @@ def main():
         formatter_class=RichHelpFormatter,
     )
     pull_parser.add_argument(
+        "-b",
+        "--branch",
+        type=str,
+        help="The branch of the template git repo.",
+        required=False,
+        default=None,
+    )
+
+    pull_parser.add_argument(
         "link",
         type=str,
         help="The http link of the template git repo.",

@@ -15,10 +15,13 @@ from .utils import (
     get_config_file,
 )
 
+from .models import TemplateConfig
+
 from tqdm import TqdmExperimentalWarning
 import warnings
 
 warnings.filterwarnings("ignore", category=TqdmExperimentalWarning)
+
 
 def run(args: Namespace):
     data_directory: str = _ensure_data_directory()
@@ -58,9 +61,6 @@ def run(args: Namespace):
                 args,
                 data_dir=data_directory,
             )
-            # print(
-            #     "[yellow]'pull' is not yet implemented, coming soon![/yellow]"
-            # )
         case "sync":
             _sync(
                 args,
@@ -193,13 +193,18 @@ def _list(args, data_dir: str, print_flag=True):
 
     return templates
 
-def _pull(args, data_dir: str, ignore_error=False):
-    url = args.link
-    
+
+def _pull(args, data_dir: str, ignore_error=False, no_confirm=False):
+    tc = TemplateConfig(args.link)
+    url = tc.url
+    branch = tc.branch if tc.branch is not None else getattr(args, "branch", None)
+
     recursive = args.recursive
 
     if recursive:
-        print("[yellow]Warning: recursive submodule download is not implemented![/yellow]")
+        print(
+            "[yellow]Warning: recursive submodule download is not implemented![/yellow]"
+        )
 
     try:
         cmd.Git().ls_remote(url)
@@ -224,30 +229,31 @@ def _pull(args, data_dir: str, ignore_error=False):
     project_name = Path(url).stem.replace("_omurtag_template", "")
 
     if project_name in templates:
-        if not Confirm.ask(
+        if not no_confirm and not Confirm.ask(
             f"[cyan]'{project_name}'[/cyan] already exists. Do you want to update?",
             default=False,
         ):
             print("[red] Update aborted.[/red]")
             return
-        else:
-            _update_template(
-                project_name,
-                data_dir=data_dir,
-            )
-            return
+        _update_template(
+            project_name,
+            data_dir=data_dir,
+            branch=branch,
+        )
+        return
 
-    # git downloads it to data_dir
     try:
-        Repo.clone_from(url, Path(data_dir) / project_name)
-        print(f"[green]✓ Cloned '{project_name}' successfully.[/green]")
+        clone_kwargs = {"branch": branch} if branch is not None else {}
+        Repo.clone_from(url, Path(data_dir) / project_name, **clone_kwargs)
+        branch_str = f" (branch: {branch})" if branch else ""
+        print(f"[green]✓ Cloned '{project_name}'{branch_str} successfully.[/green]")
     except exc.GitCommandError as e:
         print(f"[red]Clone failed: {e}[/red]")
         if not ignore_error:
             exit(1)
 
 
-def _update_template(template_name, data_dir):
+def _update_template(template_name, data_dir, branch: str | None = None):
 
     template_path = Path(data_dir) / template_name
 
@@ -263,36 +269,45 @@ def _update_template(template_name, data_dir):
         return
 
     # checks if there is .git inside
-    if not ".git" in listdir(template_path):
+    if ".git" not in listdir(template_path):
         print(f"[red]Template {template_name} is not a git repository![/red]")
         return
 
     repo = Repo(template_path)
-    # chekcs the status:
-    fetch_info = repo.remotes.origin.pull()
-    for info in fetch_info:
-        if info.flags & info.HEAD_UPTODATE:
-            print("[orange1]󰚰 Already up to date![/orange1]")
-        else:
-            print(f"[green]{template_name} has been updated[/green]")
 
+    if branch is None:
+        try:
+            symref = repo.git.symbolic_ref("refs/remotes/origin/HEAD")
+            branch = symref.split("/")[-1]
+        except exc.GitCommandError:
+            pass
 
-def parse_link(template_url: str) -> str:
-    # TODO: support "host:repo branch=dev"
-    # TODO: support "host:repo run=scirpt.sh"
-    if ":" in template_url and not template_url.startswith("http"):
-        host, path = template_url.split(":", 1)
-        if "/" not in path:
-            print(
-                f"[red]Error: invalid format [cyan]'{template_url}'[/cyan], expected 'host:user/repo'[/red]"
-            )
-            exit(1)
-        if "." in host:
-            return f"https://{host}/{path}"
-        else:
-            return f"https://{host}.com/{path}"
+    try:
+        current_branch = repo.active_branch.name
+    except TypeError:
+        current_branch = None
 
-    return template_url
+    if branch is not None and current_branch != branch:
+        try:
+            repo.git.checkout(branch)
+        except exc.GitCommandError as e:
+            if "Your local changes" in str(e) or "Please commit" in str(e):
+                print(f"[red]Template has uncommitted changes[/red]")
+                return
+            repo.remotes.origin.fetch()
+            try:
+                repo.git.checkout(branch)
+            except exc.GitCommandError:
+                print(f"[red]Branch '{branch}' not found on remote![/red]")
+                return
+        print(f"[cyan]Switched to branch '{branch}'[/cyan]")
+
+    before = repo.head.commit
+    repo.remotes.origin.pull(*([branch] if branch else []))
+    if repo.head.commit != before:
+        print(f"[green]{template_name} has been updated[/green]")
+    else:
+        print("[orange1]󰚰 Already up to date![/orange1]")
 
 
 def _sync(args, data_dir):
@@ -303,23 +318,29 @@ def _sync(args, data_dir):
         data_dir=data_dir,
         print_flag=False,
     )
-    # for url in urls:
-    for url in tqdm(urls, desc="Syncing templates"):
-        url = parse_link(url)
+
+    for link in tqdm(urls, desc="Syncing templates"):
+
+        tc = TemplateConfig(link)
+        url = tc.url
+        branch = tc.branch
         template_name = str(Path(url).stem).replace("_omurtag_template", "")
         print(f"[blue]{template_name}:[/blue]")
         if template_name not in templates:
             pull_args = Namespace(
-                link=url,
-                recursive=True,
+                link=link,
+                recursive=False,
+                branch=branch,
             )
             _pull(
                 pull_args,
                 data_dir=data_dir,
                 ignore_error=True,
+                no_confirm=True,
             )
         else:
             _update_template(
                 template_name=template_name,
                 data_dir=data_dir,
+                branch=branch,
             )
