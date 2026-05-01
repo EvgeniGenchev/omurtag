@@ -133,30 +133,28 @@ def config_exist() -> Path | None:
     return None
 
 
-def get_config_file():
-    """
-    Get the configuration for omurtag.
-
-    Searches in the following order:
-    1. XDG_CONFIG_HOME/omurtag (XDG compliant user data directory)
-    2. HOME/.omurtag
-
-    Returns:
-        Path to the first existing data directory found.
-    """
+def _load_config_module():
     path = config_exist()
-    assert path
-
+    if path is None:
+        return None
     spec = iu.spec_from_file_location("config", path)
     assert spec
-
     config = iu.module_from_spec(spec)
     assert config
-
-    loader = spec.loader
-    assert loader
-
     spec.loader.exec_module(config)  # pyright: ignore
+    return config
+
+
+def get_config_value(key: str, default=None):
+    config = _load_config_module()
+    if config is None:
+        return default
+    return getattr(config, key, default)
+
+
+def get_config_file():
+    config = _load_config_module()
+    assert config
     try:
         return config.templates
     except AttributeError:

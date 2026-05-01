@@ -16,6 +16,7 @@ from .utils import (
 )
 
 from .models import TemplateConfig
+from .security import detect_stacks, security_check
 
 from tqdm import TqdmExperimentalWarning
 import warnings
@@ -160,6 +161,8 @@ def _create(args, data_dir: str):
             dirs_exist_ok=True,
             ignore=shutil.ignore_patterns(
                 ".git",
+                "__pycache__",
+                "*.pyc",
             ),
         )
         replace_in_files(dst, {"<*project*>": project_path.name})
@@ -167,6 +170,11 @@ def _create(args, data_dir: str):
         print(
             f"[green]Project '{project_path.name}' created at {project_path.parent}[/green]"
         )
+
+        stacks = detect_stacks(dst)
+        if stacks:
+            print(f"[cyan]Detected stacks: {', '.join(stacks)}[/cyan]")
+            security_check(dst, stacks)
     except PermissionError:
         print("[red]Permission denied[/red]")
     except shutil.Error as e:
