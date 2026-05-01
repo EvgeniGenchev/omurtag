@@ -69,6 +69,29 @@ def get_data_directory() -> str:
     raise FileNotFoundError(error_msg)
 
 
+_PLACEHOLDER_RE = re.compile(r"<\*([^>]+)\*>")
+
+
+def scan_placeholders(template_path: str) -> list[str]:
+    found: set[str] = set()
+    p = Path(template_path)
+
+    for path in p.rglob("*"):
+        for m in _PLACEHOLDER_RE.finditer(path.name):
+            found.add(f"<*{m.group(1)}*>")
+
+        if path.is_file():
+            try:
+                content = path.read_text(encoding="utf-8")
+                for m in _PLACEHOLDER_RE.finditer(content):
+                    found.add(f"<*{m.group(1)}*>")
+            except (UnicodeDecodeError, PermissionError):
+                continue
+
+    found.discard("<*project*>")
+    return sorted(found)
+
+
 def replace_in_files(path: str, replace_dict: dict[str, str]) -> None:
     """
     Recursively replaces literal strings in all text files under a directory.

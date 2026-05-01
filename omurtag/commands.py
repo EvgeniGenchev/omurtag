@@ -7,15 +7,18 @@ from os import listdir
 from git import Repo, cmd, exc
 import shutil
 from shutil import copytree, rmtree
+import questionary
+
 from .utils import (
     get_data_directory,
     create_directory,
     replace_in_files,
+    scan_placeholders,
     config_exist,
     get_config_file,
 )
 
-from .models import TemplateConfig
+from .models import TemplateConfig, TemplateMetadata
 from .security import detect_stacks, security_check
 
 from tqdm import TqdmExperimentalWarning
@@ -133,8 +136,35 @@ def _add(args, data_dir: str):
 
 
 def _create(args, data_dir: str):
-    project_path = Path(args.project_name).resolve()
+    project_name = args.project_name
+    if project_name is None:
+        project_name = questionary.text("Project name:").ask()
+        if not project_name:
+            return
+
+    project_path = Path(project_name).resolve()
     template_name = args.type
+
+    if template_name is None:
+        templates = _list(args, data_dir, print_flag=False)
+        if not templates:
+            print("[red]No templates available.[/red]")
+            return
+        choices = []
+        for t in templates:
+            meta = TemplateMetadata.load(str(Path(data_dir) / t))
+            if meta:
+                title = t
+                if meta.description:
+                    title += f"  {meta.description}"
+                if meta.stack:
+                    title += f"  [{', '.join(meta.stack)}]"
+                choices.append(questionary.Choice(title=title, value=t))
+            else:
+                choices.append(t)
+        template_name = questionary.select("Choose template:", choices=choices).ask()
+        if template_name is None:
+            return
 
     if not _ensure_template_exists(
         args, data_dir, template=template_name, print_flag=True
@@ -152,6 +182,13 @@ def _create(args, data_dir: str):
     src = str(Path(data_dir) / template_name)
     dst = str(project_path)
 
+    replace_dict: dict[str, str] = {"<*project*>": project_path.name}
+    for placeholder in scan_placeholders(src):
+        value = questionary.text(f"Enter value for {placeholder}:").ask()
+        if value is None:
+            return
+        replace_dict[placeholder] = value
+
     print(project_path.name)
 
     try:
@@ -163,9 +200,10 @@ def _create(args, data_dir: str):
                 ".git",
                 "__pycache__",
                 "*.pyc",
+                "omurtag.toml",
             ),
         )
-        replace_in_files(dst, {"<*project*>": project_path.name})
+        replace_in_files(dst, replace_dict)
 
         print(
             f"[green]Project '{project_path.name}' created at {project_path.parent}[/green]"
@@ -186,7 +224,7 @@ def _create(args, data_dir: str):
 
 def _list(args, data_dir: str, print_flag=True):
 
-    _ = args
+    verbose = getattr(args, "verbose", False)
 
     try:
         templates = listdir(data_dir)
@@ -197,6 +235,12 @@ def _list(args, data_dir: str, print_flag=True):
 
     if print_flag:
         for t in templates:
+            if verbose:
+                meta = TemplateMetadata.load(str(Path(data_dir) / t))
+                if meta:
+                    stack_str = f"  [dim][{', '.join(meta.stack)}][/dim]" if meta.stack else ""
+                    print(f"[orange1]{t}[/orange1]  {meta.description}{stack_str}")
+                    continue
             print(f"[orange1]{t}[/orange1]")
 
     return templates

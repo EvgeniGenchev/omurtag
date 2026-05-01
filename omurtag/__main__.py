@@ -49,7 +49,7 @@ def main():
         formatter_class=RichHelpFormatter,
     )
     create_parser.add_argument(
-        "project_name", type=str, help="Your project name"
+        "project_name", type=str, help="Your project name", nargs="?"
     )
 
     create_parser.add_argument(
@@ -57,7 +57,8 @@ def main():
         "--type",
         type=str,
         help='Project type you want to generate. If unsure what projects are supported use "omurtag list"',
-        required=True,
+        required=False,
+        default=None,
     )
 
     # -- list mode --

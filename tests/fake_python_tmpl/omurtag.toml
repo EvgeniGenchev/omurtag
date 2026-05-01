@@ -1,0 +1,5 @@
+[template]
+name = "fake-python"
+description = "Fake Python template for security scan testing"
+stack = ["python"]
+author = ""

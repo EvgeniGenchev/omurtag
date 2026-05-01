@@ -1,4 +1,7 @@
 from rich import print
+from pathlib import Path
+from dataclasses import dataclass, field
+import tomllib
 
 
 class TemplateConfig:
@@ -45,7 +48,6 @@ class TemplateConfig:
             )
             exit(1)
 
-
     @property
     def url(self) -> str:
         assert self.host
@@ -55,10 +57,32 @@ class TemplateConfig:
             return f"https://{self.host}.com/{self.path}"
 
 
+@dataclass
+class TemplateMetadata:
+    name: str
+    description: str = ""
+    stack: list[str] = field(default_factory=list)
+    author: str = ""
+
+    @classmethod
+    def load(cls, template_path: str) -> "TemplateMetadata | None":
+        p = Path(template_path) / "omurtag.toml"
+        if not p.exists():
+            return None
+        with open(p, "rb") as f:
+            data = tomllib.load(f)
+        t = data.get("template", {})
+        return cls(
+            name=t.get("name", Path(template_path).name),
+            description=t.get("description", ""),
+            stack=t.get("stack", []),
+            author=t.get("author", ""),
+        )
+
 
 _url = "https://github.com/EvgeniGenchev/repo"
 assert (TemplateConfig("https://github.com/EvgeniGenchev/repo").url) == _url
 assert (TemplateConfig("https://github.com/EvgeniGenchev/repo.git").url) == _url
 assert (TemplateConfig("github:EvgeniGenchev/repo.git").url) == _url
-assert (TemplateConfig("github:EvgeniGenchev/repo").url) == _url 
+assert (TemplateConfig("github:EvgeniGenchev/repo").url) == _url
 assert (TemplateConfig("github.com:EvgeniGenchev/repo").url) == _url
