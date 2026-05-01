@@ -1,0 +1,52 @@
+{
+  "templates": [
+    {
+      "name": "fastapi-frontend",
+      "repo": "fastapi_frontend_omurtag_template",
+      "url": "github:EvgeniGenchev/fastapi_frontend_omurtag_template",
+      "description": "FastAPI backend with Jinja2 HTML frontend",
+      "stack": ["python", "fastapi", "jinja2"],
+      "author": "EvgeniGenchev"
+    },
+    {
+      "name": "jupyter-notebook",
+      "repo": "jupyter_notebook_omurtag_template",
+      "url": "github:EvgeniGenchev/jupyter_notebook_omurtag_template",
+      "description": "Jupyter notebook project with uv",
+      "stack": ["python", "jupyter"],
+      "author": "EvgeniGenchev"
+    },
+    {
+      "name": "neovim-plugin",
+      "repo": "neovim_plugin_omurtag_template",
+      "url": "github:EvgeniGenchev/neovim_plugin_omurtag_template",
+      "description": "Neovim plugin boilerplate",
+      "stack": ["lua", "neovim"],
+      "author": "EvgeniGenchev"
+    },
+    {
+      "name": "tool-website",
+      "repo": "tool_website_omurtag_template",
+      "url": "github:EvgeniGenchev/tool_website_omurtag_template",
+      "description": "Single-page tool website with docs, about, and donate pages",
+      "stack": ["javascript", "react"],
+      "author": "EvgeniGenchev"
+    },
+    {
+      "name": "static-html-website",
+      "repo": "static_html_website_omurtag_template",
+      "url": "github:EvgeniGenchev/static_html_website_omurtag_template",
+      "description": "Static HTML/CSS website",
+      "stack": ["html", "css"],
+      "author": "EvgeniGenchev"
+    },
+    {
+      "name": "typst-coursework",
+      "repo": "typst_coursework_omurtag_template",
+      "url": "github:grexdin/typst_coursework_omurtag_template",
+      "description": "Typst coursework document template",
+      "stack": ["typst"],
+      "author": "grexdin"
+    }
+  ]
+}
