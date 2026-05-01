@@ -1,0 +1,6 @@
+[project]
+name = "<*project*>"
+version = "0.1.0"
+dependencies = [
+    "requests==2.19.1",
+]
