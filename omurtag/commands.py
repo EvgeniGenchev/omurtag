@@ -1,5 +1,8 @@
 from rich import print
+from rich.console import Console
+from rich.markup import escape
 from rich.prompt import Confirm
+from rich.tree import Tree
 from tqdm.rich import tqdm
 from pathlib import Path
 from argparse import Namespace
@@ -16,10 +19,13 @@ from .utils import (
     scan_placeholders,
     config_exist,
     get_config_file,
+    get_config_value,
 )
 
 from .models import TemplateConfig, TemplateMetadata
 from .security import detect_stacks, security_check
+
+_console = Console()
 
 from tqdm import TqdmExperimentalWarning
 import warnings
@@ -151,6 +157,7 @@ def _create(args, data_dir: str):
             print("[red]No templates available.[/red]")
             return
         choices = []
+        max_title = max(_console.width - 6, len(max(templates, key=len)) + 1)
         for t in templates:
             meta = TemplateMetadata.load(str(Path(data_dir) / t))
             if meta:
@@ -159,6 +166,8 @@ def _create(args, data_dir: str):
                     title += f"  {meta.description}"
                 if meta.stack:
                     title += f"  [{', '.join(meta.stack)}]"
+                if len(title) > max_title:
+                    title = title[:max_title - 1] + "…"
                 choices.append(questionary.Choice(title=title, value=t))
             else:
                 choices.append(t)
@@ -233,15 +242,19 @@ def _list(args, data_dir: str, print_flag=True):
             print(f"[red]No templates found in {data_dir}[/red]")
         exit(1)
 
+    show_desc  = verbose or bool(get_config_value("show_desc",  True))
+    show_stack = verbose or bool(get_config_value("show_stack", True))
+
     if print_flag:
         for t in templates:
-            if verbose:
-                meta = TemplateMetadata.load(str(Path(data_dir) / t))
-                if meta:
-                    stack_str = f"  [dim][{', '.join(meta.stack)}][/dim]" if meta.stack else ""
-                    print(f"[orange1]{t}[/orange1]  {meta.description}{stack_str}")
-                    continue
-            print(f"[orange1]{t}[/orange1]")
+            meta = TemplateMetadata.load(str(Path(data_dir) / t))
+            tree = Tree(f"[orange1]{t}[/orange1]")
+            if meta:
+                if show_desc and meta.description:
+                    tree.add(f"[white]{escape(meta.description)}[/white]")
+                if show_stack and meta.stack:
+                    tree.add(f"[cyan]{escape('[' + ', '.join(meta.stack) + ']')}[/cyan]")
+            print(tree)
 
     return templates
 

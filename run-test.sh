@@ -135,6 +135,15 @@ test_neovim() {
     assert_no_placeholder  "neovim: no leftover placeholders" "/tmp/$pname"
 }
 
+# --- list --verbose: desc and stack shown for templates with omurtag.toml ---
+test_list_verbose() {
+    echo "--- list --verbose ---"
+    omurtag add "$NEOVIM_TMPL"
+    out=$(omurtag list --verbose 2>&1)
+    assert_contains "list --verbose: neovim desc shown"  "Neovim plugin boilerplate" "$out"
+    assert_contains "list --verbose: neovim stack shown" "neovim"                    "$out"
+}
+
 # --- security scan: fake python template with requests==2.19.1 (has CVE-2018-18074) ---
 test_security_scan() {
     echo "--- security scan (requests==2.19.1) ---"
@@ -170,6 +179,7 @@ test_pull_branch
 test_create_fastapi
 test_sync
 test_neovim
+test_list_verbose
 test_security_scan
 echo ""
 echo "=== $PASS passed, $FAIL failed ==="
