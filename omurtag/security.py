@@ -37,7 +37,7 @@ def detect_stacks(project_path: str) -> list[str]:
 
 def _get(url: str):
     assert _requests is not None
-    return _requests.get(url)
+    return _requests.get(url, timeout=10)
 
 
 def _advisories(system: str, pkg: str, version: str) -> list[dict]:
@@ -200,6 +200,9 @@ def security_check(project_path: str, stacks: list[str]) -> None:
         try:
             results = scanner.scan(project_path, transitive)
         except NotImplementedError:
+            continue
+        except Exception as e:
+            print(f"[yellow]Security scan skipped ({stack}): {e}[/yellow]")
             continue
         print(f"[blue]Checking {stack} dependencies...[/blue]")
         _print_results(results)

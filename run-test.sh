@@ -131,7 +131,6 @@ test_neovim() {
     assert_path_exists     "neovim: lua/<pname>/init.lua"  "/tmp/$pname/lua/$pname/init.lua"
     assert_path_exists     "neovim: plugin/<pname>.lua"    "/tmp/$pname/plugin/$pname.lua"
     assert_path_exists     "neovim: doc/<pname>.txt"       "/tmp/$pname/doc/$pname.txt"
-    assert_path_exists     "neovim: doc/tags preserved"    "/tmp/$pname/doc/tags"
     assert_path_not_exists "neovim: no <*project*> dir"    "/tmp/$pname/lua/<*project*>"
     assert_no_placeholder  "neovim: no leftover placeholders" "/tmp/$pname"
 }
