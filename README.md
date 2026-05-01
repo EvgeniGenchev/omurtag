@@ -1,142 +1,118 @@
-# 🔨 omurtag
+# omurtag
 
-A CLI tool for creating projects from templates.
+A builder for a builder. Scaffold projects from personal templates, with a security audit on every create.
 
-## Installation
+## Install
 
 ```bash
-uv cache clean && uv tool uninstall omurtag && uv tool install .
+curl -fsSL https://evgeni-genchev.com/omurtag/install.sh | sh
 ```
 
-If `omurtag` is not found after installing, run:
+Or directly:
+
+```bash
+uv tool install omurtag
+# or
+pip install omurtag
+```
+
+If `omurtag` is not found after installing:
 
 ```bash
 uv tool update-shell
 ```
 
-## Available templates
-
-- [fastapi_fronend](https://github.com/EvgeniGenchev/fastapi_frontend_omurtag_template)
-- [jupyter_notebook](https://github.com/EvgeniGenchev/jupyter_notebook_omurtag_template)
-- [typist_coursework](https://github.com/grexdin/typst_coursework_omurtag_template)
-
-## Usage
-
-```bash
-omurtag <command> [options]
-```
-
 ## Commands
 
-### `add` — Add a template
+```
+omurtag {add,remove,create,list,pull,sync}
 
-Add a local folder as a template.
-
-```bash
-omurtag add <path/to/folder>
+  add      Add a local folder as a template
+  remove   Remove a template by name
+  create   Generate a project from a template
+  list     List templates with stack info
+  pull     Pull a template from a git repo
+  sync     Download/update all templates from config
 ```
 
-### `remove` — Remove a template
-
-Remove a template by name.
+### Examples
 
 ```bash
-omurtag remove <template_name>
-```
+# pull a template from GitHub
+omurtag pull github:EvgeniGenchev/fastapi_frontend_omurtag_template
 
-### `list` — List templates
+# pull a specific branch
+omurtag pull github:user/repo_omurtag_template --branch dev
 
-List all available templates.
-
-```bash
+# list available templates
 omurtag list
-```
+omurtag list --verbose
 
-### `create` — Create a project
+# create a project (interactive if no args)
+omurtag create
+omurtag create ~/projects/myapp --type fastapi_frontend
 
-Generate a new project from a template. The project will be created at the given path, resolved relative to your current directory.
+# add a local folder as a template
+omurtag add ~/my_template_folder
 
-```bash
-omurtag create <project_name> -t <template_name>
-```
+# remove a template
+omurtag remove fastapi_frontend
 
-**Options:**
-
-| Flag | Description |
-|------|-------------|
-| `-t`, `--type` | Template to use *(required)* |
-
-**Examples:**
-
-```bash
-# Create project in current directory
-omurtag create my_project -t python
-
-# Create project two levels up
-omurtag create ../../my_project -t python
-```
-
-### `pull` — Pull a template from Git
-
-Fetch a template directly from a git repository and add it to your local templates.
-
-```bash
-omurtag pull <repo_url>
-```
-
-**Options:**
-
-| Flag | Description |
-|------|-------------|
-| `-r`, `--recursive` | Clone submodules recursively |
-
-**Examples:**
-
-```bash
-# Pull a template from GitHub
-omurtag pull https://github.com/user/repo_omurtag_template.git
-
-# Pull with submodules
-omurtag pull https://github.com/user/repo_omurtag_template.git -r
-```
-
-**Requirements:**
-- The repository URL must end with `_omurtag_template`
-- The repository must be a valid git repository
-
-### `sync` — Sync all templates
-
-Download or update all template repositories mentioned in your configuration file.
-
-```bash
+# sync all templates from config
 omurtag sync
 ```
 
-**How it works:**
-1. Reads template URLs from your config file (`config.py`)
-2. For each URL:
-   - If the template doesn't exist locally, it pulls it
-   - If the template exists locally, it updates it from the remote
-3. Shows progress with a progress bar
+## Configuration
 
-**Configuration:**
-
-Create a `config.py` file in one of these locations:
-- `XDG_CONFIG_HOME/omurtag/config.py` (XDG compliant)
-- `HOME/.omurtag/config.py`
-
-Example `config.py`:
+Config file location: `$XDG_CONFIG_HOME/omurtag/config.py` or `~/.omurtag/config.py`
 
 ```python
 templates = [
-    "github:user/repo_omurtag_template",  # Expands to https://github.com/user/repo_omurtag_template
-    "gitlab:user/repo_omurtag_template",  # Expands to https://gitlab.com/user/repo_omurtag_template
+    "github:EvgeniGenchev/fastapi_frontend_omurtag_template",
+    "gitlab:user/my_project_omurtag_template",
+    "codeberg.org:user/tool_omurtag_template",
+    "https://codeberg.org/user/repo_omurtag_template.git",
 ]
+
+# optional
+transitive_deps = False  # scan transitive deps on create (slower)
+show_desc  = True        # show description in list
+show_stack = True        # show stack in list
 ```
 
-## Tips
+## Creating templates
 
-- Use `omurtag list` to see all available templates before running `create`.
-- `project_name` in `create` supports relative paths like `../` or `../../`.
-- For `sync` and `pull` commands, make sure you have a valid `config.py` file in the correct location.
-- Template repositories must end with `_omurtag_template` to be recognized by the `pull` command.
+Any folder can be a template. Use `omurtag add <folder>` to register a local one. To host it so others can pull it, name the repo with a `_omurtag_template` suffix.
+
+**Placeholders** use the `<*name*>` syntax. On `omurtag create`, every placeholder is replaced in file contents, filenames, and directory names. `<*project*>` is always set to the project name. Any other placeholders are prompted for interactively at create time.
+
+**Security audit** runs automatically on every `create`. omurtag detects the stack from marker files (`pyproject.toml`, `package.json`, `Cargo.toml`, etc.) and checks direct dependencies for known CVEs via [deps.dev](https://deps.dev). Opt in to transitive scanning with `transitive_deps = True` in config.
+
+An optional **`omurtag.toml`** at the template root provides metadata shown in `omurtag list`. It is never copied into created projects.
+
+```toml
+[template]
+name        = "my-service"
+description = "Minimal Python service"
+stack       = ["python"]
+author      = "you"
+```
+
+## Available templates
+
+- [fastapi-frontend](https://github.com/EvgeniGenchev/fastapi_frontend_omurtag_template) — FastAPI backend with Jinja2 HTML frontend
+- [jupyter-notebook](https://github.com/EvgeniGenchev/jupyter_notebook_omurtag_template) — Jupyter notebook project with uv
+- [neovim-plugin](https://github.com/EvgeniGenchev/neovim_plugin_omurtag_template) — Neovim plugin boilerplate
+- [tool-website](https://github.com/EvgeniGenchev/tool_website_omurtag_template) — Single-page tool website with docs, about, and donate pages
+- [static-html-website](https://github.com/EvgeniGenchev/static_html_website_omurtag_template) — Static HTML/CSS website
+- [typst-coursework](https://github.com/grexdin/typst_coursework_omurtag_template) — Typst coursework document template
+
+Full list: [evgeni-genchev.com/omurtag/templates.json](https://evgeni-genchev.com/omurtag/templates.json)
+
+---
+
+## Dev install
+
+```bash
+uv cache clean && uv tool uninstall omurtag && uv tool install .
+```

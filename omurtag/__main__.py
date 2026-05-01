@@ -5,7 +5,7 @@ from omurtag import run
 
 PROG = "omurtag"
 DESCRIPTION = """
-TEST omurtag is a tool that helps your create projects from templates
+omurtag is a tool that helps you create projects from templates
 """
 RichHelpFormatter.console = Console(force_terminal=True)
 
