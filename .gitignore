@@ -8,5 +8,8 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Test/tool artifacts
+.pytest_cache/
 PLAN.md
 
