@@ -99,6 +99,12 @@ def replace_in_files(path: str, replace_dict: dict[str, str]) -> None:
                 encoding="utf-8",
             )
 
+    # deepest-first s.t. parent do not fuck up children lookup 
+    for p in sorted(Path(path).rglob("*"), key=lambda p: len(p.parts), reverse=True):
+        new_name = pattern.sub(lambda m: replace_dict[m.group(0)], p.name)
+        if new_name != p.name:
+            p.rename(p.parent / new_name)
+
 
 def config_exist() -> Path | None:
     """
