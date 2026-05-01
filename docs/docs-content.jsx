@@ -38,7 +38,7 @@ window.DOCS_CONTENT = [
         `Placeholders use the \`<*name*>\` syntax. On \`${toolName} create\`, every placeholder is replaced in **file contents**, **filenames**, and **directory names**. \`<*project*>\` is always set to the project name. Any other placeholders you define are prompted for interactively at create time.`,
         `A **security audit** runs automatically on every \`create\`. ${toolName} detects the stack from marker files (\`pyproject.toml\`, \`package.json\`, \`Cargo.toml\`, etc.) and checks each direct dependency for known CVEs via [deps.dev](https://deps.dev). Opt in to transitive scanning with \`transitive_deps = True\` in config.`,
         `An optional \`omurtag.toml\` at the template root provides metadata shown in \`${toolName} list\`. It is never copied into created projects. Fields: \`name\`, \`description\`, \`stack\`, \`author\`.`,
-        `A community-maintained list of available templates is kept up to date at [/omurtag/templates.json](/templates.json).`,
+        `A community-maintained list of available templates is kept up to date at [/templates.json](omurtag/templates.json).`,
       ],
       code: { lang: "bash", text: `# folder structure example\nmy_service_omurtag_template/\n  <*project*>/\n    main.py\n  <*project*>_tests/\n    test_main.py\n  pyproject.toml       # triggers python security scan\n  omurtag.toml         # optional metadata\n\n# omurtag.toml\n[template]\nname        = "my-service"\ndescription = "Minimal Python service"\nstack       = ["python"]\nauthor      = "you"` },
     }),
