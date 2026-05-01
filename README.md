@@ -116,3 +116,7 @@ Full list: [evgeni-genchev.com/omurtag/templates.json](https://evgeni-genchev.co
 ```bash
 uv cache clean && uv tool uninstall omurtag && uv tool install .
 ```
+
+## License
+
+[WTFPL](http://www.wtfpl.net)
