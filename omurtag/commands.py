@@ -49,46 +49,23 @@ def run(args: Namespace):
         )
         exit(1)
 
-    match args.mode:
-        case "add":
-            _add(
-                args,
-                data_dir=data_directory,
-            )
-        case "list":
-            _list(
-                args,
-                data_dir=data_directory,
-            )
-        case "create":
-            _create(
-                args,
-                data_dir=data_directory,
-            )
-        case "remove":
-            _delete(
-                args,
-                data_dir=data_directory,
-            )
-        case "pull":
-            _pull(
-                args,
-                data_dir=data_directory,
-            )
-        case "sync":
-            _sync(
-                args,
-                data_dir=data_directory,
-            )
-        case "search":
-            _search(
-                args,
-                data_dir=data_directory,
-            )
-
-        case _:
-            print(args.mode)
-            assert False  # this should never happen if argparse works
+    mode = args.mode
+    if mode == "add":
+        _add(args, data_dir=data_directory)
+    elif mode == "list":
+        _list(args, data_dir=data_directory)
+    elif mode == "create":
+        _create(args, data_dir=data_directory)
+    elif mode == "remove":
+        _delete(args, data_dir=data_directory)
+    elif mode == "pull":
+        _pull(args, data_dir=data_directory)
+    elif mode == "sync":
+        _sync(args, data_dir=data_directory)
+    elif mode == "search":
+        _search(args, data_dir=data_directory)
+    else:
+        assert False  # this should never happen if argparse works
 
 
 def _ensure_data_directory() -> str:

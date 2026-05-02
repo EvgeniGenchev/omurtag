@@ -1,6 +1,9 @@
 from pathlib import Path
 from rich import print
-import tomllib
+try:
+    import tomllib
+except ImportError:
+    import tomli as tomllib  # type: ignore
 import re
 
 try:
@@ -110,21 +113,31 @@ class PypiScanner(DepScanner):
     system = "pypi"
 
     def scan(self, project_path: str, transitive: bool) -> dict[str, list]:
-        p = Path(project_path) / "pyproject.toml"
-        if p.exists():
-            with open(p, "rb") as f:
-                data = tomllib.load(f)
-            raw = data.get("project", {}).get("dependencies", [])
-            direct = []
-            for dep in raw:
-                m = re.match(r"^([A-Za-z0-9_\-.]+)", dep)
-                if not m:
-                    continue
-                name = m.group(1).lower().replace("-", "_")
-                direct.append((name, _parse_version(dep)))
-            return self._collect(direct, transitive)
+        p = Path(project_path)
+        direct = []
 
-        return {}
+        toml = p / "pyproject.toml"
+        req = p / "requirements.txt"
+
+        if toml.exists():
+            with open(toml, "rb") as f:
+                data = tomllib.load(f)
+            for dep in data.get("project", {}).get("dependencies", []):
+                m = re.match(r"^([A-Za-z0-9_\-.]+)", dep)
+                if m:
+                    name = m.group(1).lower().replace("-", "_")
+                    direct.append((name, _parse_version(dep)))
+        elif req.exists():
+            for line in req.read_text(encoding="utf-8").splitlines():
+                line = line.strip()
+                if not line or line.startswith("#") or line.startswith("-"):
+                    continue
+                m = re.match(r"^([A-Za-z0-9_\-.]+)", line)
+                if m:
+                    name = m.group(1).lower().replace("-", "_")
+                    direct.append((name, _parse_version(line)))
+
+        return self._collect(direct, transitive)
 
 
 class MavenScanner(DepScanner):

@@ -1,7 +1,10 @@
 from rich import print
 from pathlib import Path
 from dataclasses import dataclass, field
-import tomllib
+try:
+    import tomllib
+except ImportError:
+    import tomli as tomllib  # type: ignore
 
 
 class TemplateConfig:

@@ -3,13 +3,14 @@ name = "omurtag"
 version = "0.4.1"
 description = ""
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.9"
 dependencies = [
     "gitpython>=3.1.46",
     "rich-argparse>=1.7.2",
     "tqdm>=4.67.3",
     "requests>=2.32.0",
     "questionary>=2.0.0",
+    "tomli>=2.0.0; python_version < '3.11'",
 ]
 
 [project.scripts]
