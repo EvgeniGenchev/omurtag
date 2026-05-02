@@ -208,7 +208,7 @@ function AboutPage({ toolName, onNav }) {
       </p>
 
       <dl className="factsheet">
-        <dt>License</dt><dd>WTFPL</dd>
+        <dt>License</dt><dd>BSD-3-Clause</dd>
         <dt>First release</dt><dd>TBD</dd>
         <dt>Latest</dt><dd>0.4.1</dd>
         <dt>Source</dt><dd><a href="https://github.com/EvgeniGenchev/omurtag">github.com/EvgeniGenchev/omurtag</a></dd>

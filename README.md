@@ -125,4 +125,4 @@ uv cache clean && uv tool uninstall omurtag && uv tool install .
 
 ## License
 
-[WTFPL](http://www.wtfpl.net)
+[BSD-3-Clause](LICENSE)
