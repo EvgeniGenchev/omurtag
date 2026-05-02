@@ -5,7 +5,7 @@ export XDG_DATA_HOME=/tmp/omurtag_data
 
 FASTAPI_URL="github:EvgeniGenchev/fastapi_frontend_omurtag_template"
 FASTAPI_BRANCH="docker"
-NEOVIM_TMPL="/home/gena/Workspace/Hobby/neovim_plugin_omurtag_template"
+NEOVIM_TMPL="tests/fake_neovim_tmpl"
 
 PASS=0
 FAIL=0
@@ -126,7 +126,7 @@ test_neovim() {
     echo "--- neovim plugin template ---"
     omurtag add "$NEOVIM_TMPL"
     pname="omurtag_test_myplugin"
-    omurtag create /tmp/$pname -t neovim_plugin_omurtag_template
+    omurtag create /tmp/$pname -t fake_neovim_tmpl
 
     assert_path_exists     "neovim: lua/<pname>/init.lua"  "/tmp/$pname/lua/$pname/init.lua"
     assert_path_exists     "neovim: plugin/<pname>.lua"    "/tmp/$pname/plugin/$pname.lua"

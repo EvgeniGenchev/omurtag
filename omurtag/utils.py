@@ -100,6 +100,8 @@ def replace_in_files(path: str, replace_dict: dict[str, str]) -> None:
         None
     """
 
+    if not replace_dict:
+        return
     pattern = re.compile("|".join(re.escape(k) for k in replace_dict))
 
     for file in Path(path).rglob("*"):
@@ -177,7 +179,9 @@ def get_config_value(key: str, default=None):
 
 def get_config_file():
     config = _load_config_module()
-    assert config
+    if config is None:
+        print("[red] No configuration file found![/red]")
+        exit(1)
     try:
         return config.templates
     except AttributeError:

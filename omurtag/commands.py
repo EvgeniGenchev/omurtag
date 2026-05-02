@@ -131,20 +131,15 @@ def _add(args, data_dir: str):
     src = args.input_file
     dst = str(Path(data_dir) / Path(src).stem)
     try:
-        copytree(
-            src,
-            dst,
-            dirs_exist_ok=True,
-        )
-    # TODO: figure these cases out
+        copytree(src, dst, dirs_exist_ok=True)
     except FileNotFoundError:
-        assert False
+        print(f"[red]Folder not found: {src}[/red]")
     except PermissionError:
-        pass
-    except shutil.Error:
-        pass
-    except OSError:
-        pass
+        print(f"[red]Permission denied copying {src}[/red]")
+    except shutil.Error as e:
+        print(f"[red]Copy error: {e}[/red]")
+    except OSError as e:
+        print(f"[red]OS error: {e}[/red]")
 
 
 def _create(args, data_dir: str):
@@ -165,7 +160,7 @@ def _create(args, data_dir: str):
         choices = []
         show_desc  = bool(get_config_value("show_desc",  True))
         show_stack = bool(get_config_value("show_stack", True))
-        max_title = max(_console.width - 6, len(max(templates, key=len)) + 1)
+        max_title = min(_console.width - 6, len(max(templates, key=len)) + 1)
         for t in templates:
             meta = TemplateMetadata.load(str(Path(data_dir) / t))
             if meta:
@@ -233,8 +228,11 @@ def _create(args, data_dir: str):
     except PermissionError:
         print("[red]Permission denied[/red]")
     except shutil.Error as e:
-        for failed_src, _, msg in e.args[0]:
-            print(f"[red]Failed to copy {failed_src}: {msg}[/red]")
+        try:
+            for failed_src, _, msg in e.args[0]:
+                print(f"[red]Failed to copy {failed_src}: {msg}[/red]")
+        except (TypeError, ValueError):
+            print(f"[red]Copy error: {e}[/red]")
     except OSError as e:
         print(f"[red]OS error: {e}[/red]")
 
@@ -248,7 +246,7 @@ def _list(args, data_dir: str, print_flag=True):
     except FileNotFoundError:
         if print_flag:
             print(f"[red]No templates found in {data_dir}[/red]")
-        exit(1)
+        return []
 
     show_desc  = verbose or bool(get_config_value("show_desc",  True))
     show_stack = verbose or bool(get_config_value("show_stack", True))
@@ -299,7 +297,7 @@ def _pull(args, data_dir: str, ignore_error=False, no_confirm=False):
     # checks if the path.name without _omurtag_template is in data_dir
     templates = _list(args, data_dir=data_dir, print_flag=False)
 
-    project_name = Path(url).stem.replace("_omurtag_template", "")
+    project_name = Path(url).stem.removesuffix("_omurtag_template")
 
     if project_name in templates:
         if not no_confirm and not Confirm.ask(
@@ -353,7 +351,7 @@ def _update_template(template_name, data_dir, branch: str | None = None):
             symref = repo.git.symbolic_ref("refs/remotes/origin/HEAD")
             branch = symref.split("/")[-1]
         except exc.GitCommandError:
-            pass
+            print("[yellow]Warning: could not detect default branch, using current[/yellow]")
 
     try:
         current_branch = repo.active_branch.name
@@ -376,7 +374,11 @@ def _update_template(template_name, data_dir, branch: str | None = None):
         print(f"[cyan]Switched to branch '{branch}'[/cyan]")
 
     before = repo.head.commit
-    repo.remotes.origin.pull(*([branch] if branch else []))
+    try:
+        repo.remotes.origin.pull(*([branch] if branch else []))
+    except exc.GitCommandError as e:
+        print(f"[red]Pull failed: {e}[/red]")
+        return
     if repo.head.commit != before:
         print(f"[green]{template_name} has been updated[/green]")
     else:
@@ -430,7 +432,7 @@ def _sync(args, data_dir):
         tc = TemplateConfig(link)
         url = tc.url
         branch = tc.branch
-        template_name = str(Path(url).stem).replace("_omurtag_template", "")
+        template_name = str(Path(url).stem).removesuffix("_omurtag_template")
         print(f"[blue]{template_name}:[/blue]")
         if template_name not in templates:
             pull_args = Namespace(
