@@ -1,5 +1,6 @@
 import argparse
 from rich.console import Console
+from rich import print
 from rich_argparse import RichHelpFormatter
 from omurtag import run
 
@@ -16,7 +17,9 @@ def main():
         formatter_class=RichHelpFormatter,
         description=DESCRIPTION,
     )
-    subparsers = parser.add_subparsers(dest="mode", required=True)
+    parser.add_argument("-v","--version", action="store_true")
+
+    subparsers = parser.add_subparsers(dest="mode")
 
     # -- add mode --
     add_parser = subparsers.add_parser(
@@ -111,6 +114,15 @@ def main():
     )
 
     args = parser.parse_args()
+
+    if not args.version and args.mode is None:
+        parser.error("a mode is required")
+
+    if args.version:
+        version = __import__("importlib").metadata.version("omurtag")
+        print(f"[blue]V{version}[/blue]")
+
+        exit(0)
 
     run(args)
 
