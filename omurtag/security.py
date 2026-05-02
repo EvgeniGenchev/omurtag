@@ -100,19 +100,20 @@ class PypiScanner(DepScanner):
 
     def scan(self, project_path: str, transitive: bool) -> dict[str, list]:
         p = Path(project_path) / "pyproject.toml"
-        if not p.exists():
-            return {}
-        with open(p, "rb") as f:
-            data = tomllib.load(f)
-        raw = data.get("project", {}).get("dependencies", [])
-        direct = []
-        for dep in raw:
-            m = re.match(r"^([A-Za-z0-9_\-.]+)", dep)
-            if not m:
-                continue
-            name = m.group(1).lower().replace("-", "_")
-            direct.append((name, _parse_version(dep)))
-        return self._collect(direct, transitive)
+        if p.exists():
+            with open(p, "rb") as f:
+                data = tomllib.load(f)
+            raw = data.get("project", {}).get("dependencies", [])
+            direct = []
+            for dep in raw:
+                m = re.match(r"^([A-Za-z0-9_\-.]+)", dep)
+                if not m:
+                    continue
+                name = m.group(1).lower().replace("-", "_")
+                direct.append((name, _parse_version(dep)))
+            return self._collect(direct, transitive)
+
+        return {}
 
 
 class MavenScanner(DepScanner):

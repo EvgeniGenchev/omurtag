@@ -3,6 +3,8 @@ from rich.console import Console
 from rich.markup import escape
 from rich.prompt import Confirm
 from rich.tree import Tree
+from rich.panel import Panel
+from rich.syntax import Syntax
 from tqdm.rich import tqdm
 from pathlib import Path
 from argparse import Namespace
@@ -12,6 +14,7 @@ import shutil
 from shutil import copytree, rmtree
 import questionary
 import requests
+import subprocess
 
 from .utils import (
     get_data_directory,
@@ -160,7 +163,7 @@ def _create(args, data_dir: str):
         choices = []
         show_desc  = bool(get_config_value("show_desc",  True))
         show_stack = bool(get_config_value("show_stack", True))
-        max_title = min(_console.width - 6, len(max(templates, key=len)) + 1)
+        max_title = max(_console.width - 6, len(max(templates, key=len)) + 1)
         for t in templates:
             meta = TemplateMetadata.load(str(Path(data_dir) / t))
             if meta:
@@ -213,6 +216,7 @@ def _create(args, data_dir: str):
                 "__pycache__",
                 "*.pyc",
                 "omurtag.toml",
+                "omurtag.sh",
             ),
         )
         replace_in_files(dst, replace_dict)
@@ -225,6 +229,24 @@ def _create(args, data_dir: str):
         if stacks:
             print(f"[cyan]Detected stacks: {', '.join(stacks)}[/cyan]")
             security_check(dst, stacks)
+
+        script = Path(src) / "omurtag.sh"
+        if script.exists():
+            _console.print(Panel(
+                Syntax(script.read_text(), "sh", theme="ansi_dark"),
+                title="[yellow]omurtag.sh[/yellow]",
+                border_style="yellow",
+            ))
+            try:
+                run_it = Confirm.ask("Run this script in the project directory?", default=False)
+            except EOFError:
+                run_it = False
+            if run_it:
+                result = subprocess.run(["sh", str(script)], cwd=dst)
+                if result.returncode != 0:
+                    print(f"[red]Script exited with code {result.returncode}[/red]")
+                else:
+                    print("[green]Script completed.[/green]")
     except PermissionError:
         print("[red]Permission denied[/red]")
     except shutil.Error as e:

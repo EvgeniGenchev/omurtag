@@ -159,6 +159,18 @@ test_security_scan() {
     assert_contains    "security: CVE reported"             "CVE-2018-18074"   "$out"
 }
 
+# --- post-create script: omurtag.sh runs in project dir, not copied ---
+test_script_execution() {
+    echo "--- post-create script ---"
+    omurtag add tests/fake_script_tmpl
+    pname="omurtag_test_scriptrun"
+    printf 'y\n' | omurtag create /tmp/$pname -t fake_script_tmpl 2>&1
+
+    assert_path_exists     "script: project dir created"        "/tmp/$pname"
+    assert_path_exists     "script: sentinel file created"      "/tmp/$pname/.omurtag_script_ran"
+    assert_path_not_exists "script: omurtag.sh not in project"  "/tmp/$pname/omurtag.sh"
+}
+
 # --- run ---
 
 if ! command -v omurtag &>/dev/null; then
@@ -181,6 +193,7 @@ test_sync
 test_neovim
 test_list_verbose
 test_security_scan
+test_script_execution
 echo ""
 echo "=== $PASS passed, $FAIL failed ==="
 [ $FAIL -eq 0 ] && exit 0 || exit 1

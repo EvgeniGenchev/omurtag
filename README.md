@@ -92,6 +92,8 @@ Any folder can be a template. Use `omurtag add <folder>` to register a local one
 
 **Security audit** runs automatically on every `create`. omurtag detects the stack from marker files (`pyproject.toml`, `package.json`, `Cargo.toml`, etc.) and checks direct dependencies for known CVEs via [deps.dev](https://deps.dev). Opt in to transitive scanning with `transitive_deps = True` in config.
 
+An optional **`omurtag.sh`** at the template root is a post-create setup script. After the project is created, omurtag shows its contents and asks whether to run it in the project directory. It is never copied into created projects.
+
 An optional **`omurtag.toml`** at the template root provides metadata shown in `omurtag list`. It is never copied into created projects.
 
 ```toml
