@@ -25,7 +25,7 @@ uv tool update-shell
 ## Commands
 
 ```
-omurtag {add,remove,create,list,pull,sync}
+omurtag {add,remove,create,list,pull,sync,search}
 
   add      Add a local folder as a template
   remove   Remove a template by name
@@ -33,11 +33,15 @@ omurtag {add,remove,create,list,pull,sync}
   list     List templates with stack info
   pull     Pull a template from a git repo
   sync     Download/update all templates from config
+  search   Browse and pull from the community template list
 ```
 
 ### Examples
 
 ```bash
+# browse community templates and pull interactively
+omurtag search
+
 # pull a template from GitHub
 omurtag pull github:EvgeniGenchev/fastapi_frontend_omurtag_template
 

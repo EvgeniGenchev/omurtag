@@ -51,7 +51,7 @@ window.DOCS_CONTENT = [
       paragraphs: [
         `${toolName} is a tool that helps you create projects from templates.`,
       ],
-      code: { lang: "bash", text: `${toolName} {add,remove,create,list,pull,sync}\n\n  add      Add a local folder as a template\n  remove   Remove a template by name\n  create   Generate a project from a template\n  list     List templates with stack info\n  pull     Pull a template from a git repo\n  sync     Download/update all templates from config` },
+      code: { lang: "bash", text: `${toolName} {add,remove,create,list,pull,sync,search}\n\n  add      Add a local folder as a template\n  remove   Remove a template by name\n  create   Generate a project from a template\n  list     List templates with stack info\n  pull     Pull a template from a git repo\n  sync     Download/update all templates from config\n  search   Browse and pull from the community template list` },
     }),
   },
   {
@@ -74,7 +74,7 @@ window.DOCS_CONTENT = [
       paragraphs: [
         `Common workflows.`,
       ],
-      code: { lang: "bash", text: `# pull a template from GitHub\n${toolName} pull github:EvgeniGenchev/fastapi_frontend_omurtag_template\n\n# pull a specific branch\n${toolName} pull github:user/repo_omurtag_template --branch dev\n\n# list available templates\n${toolName} list\n${toolName} list --verbose\n\n# create a project (interactive if no args)\n${toolName} create\n${toolName} create ~/projects/myapp --type fastapi_frontend\n\n# add a local folder as a template\n${toolName} add ~/my_template_folder\n\n# remove a template\n${toolName} remove fastapi_frontend\n\n# sync all templates from config\n${toolName} sync` },
+      code: { lang: "bash", text: `# browse community templates and pull interactively\n${toolName} search\n\n# pull a template from GitHub\n${toolName} pull github:EvgeniGenchev/fastapi_frontend_omurtag_template\n\n# pull a specific branch\n${toolName} pull github:user/repo_omurtag_template --branch dev\n\n# list available templates\n${toolName} list\n${toolName} list --verbose\n\n# create a project (interactive if no args)\n${toolName} create\n${toolName} create ~/projects/myapp --type fastapi_frontend\n\n# add a local folder as a template\n${toolName} add ~/my_template_folder\n\n# remove a template\n${toolName} remove fastapi_frontend\n\n# sync all templates from config\n${toolName} sync` },
     }),
   },
   {

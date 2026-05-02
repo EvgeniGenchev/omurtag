@@ -102,6 +102,14 @@ def main():
         help="Downlaod/Update all the template repositories mentioned in the config file.",
         formatter_class=RichHelpFormatter,
     )
+
+    # -- search mode --
+    subparsers.add_parser(
+        "search",
+        help="Browse and pull templates from the community list.",
+        formatter_class=RichHelpFormatter,
+    )
+
     args = parser.parse_args()
 
     run(args)

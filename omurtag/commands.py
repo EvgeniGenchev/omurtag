@@ -11,6 +11,7 @@ from git import Repo, cmd, exc
 import shutil
 from shutil import copytree, rmtree
 import questionary
+import requests
 
 from .utils import (
     get_data_directory,
@@ -36,7 +37,7 @@ warnings.filterwarnings("ignore", category=TqdmExperimentalWarning)
 def run(args: Namespace):
     data_directory: str = _ensure_data_directory()
 
-    if config_exist() is None:
+    if args.mode != "search" and config_exist() is None:
         print("[red] No configuration file found!\n[/red]")
         print(
             " Please create a [yellow]config.py[/yellow] at one of the following locations: \n\
@@ -73,6 +74,11 @@ def run(args: Namespace):
             )
         case "sync":
             _sync(
+                args,
+                data_dir=data_directory,
+            )
+        case "search":
+            _search(
                 args,
                 data_dir=data_directory,
             )
@@ -157,14 +163,16 @@ def _create(args, data_dir: str):
             print("[red]No templates available.[/red]")
             return
         choices = []
+        show_desc  = bool(get_config_value("show_desc",  True))
+        show_stack = bool(get_config_value("show_stack", True))
         max_title = max(_console.width - 6, len(max(templates, key=len)) + 1)
         for t in templates:
             meta = TemplateMetadata.load(str(Path(data_dir) / t))
             if meta:
                 title = t
-                if meta.description:
+                if show_desc and meta.description:
                     title += f"  {meta.description}"
-                if meta.stack:
+                if show_stack and meta.stack:
                     title += f"  [{', '.join(meta.stack)}]"
                 if len(title) > max_title:
                     title = title[:max_title - 1] + "…"
@@ -373,6 +381,39 @@ def _update_template(template_name, data_dir, branch: str | None = None):
         print(f"[green]{template_name} has been updated[/green]")
     else:
         print("[orange1]󰚰 Already up to date![/orange1]")
+
+
+def _search(args, data_dir: str):
+    url = "https://evgeni-genchev.com/omurtag/templates.json"
+    try:
+        resp = requests.get(url, timeout=10)
+        resp.raise_for_status()
+        templates = resp.json().get("templates", [])
+    except requests.RequestException as e:
+        print(f"[red]Failed to fetch templates: {e}[/red]")
+        return
+
+    if not templates:
+        print("[red]No templates found.[/red]")
+        return
+
+    show_desc  = bool(get_config_value("show_desc",  True))
+    show_stack = bool(get_config_value("show_stack", True))
+    choices = []
+    for t in templates:
+        title = t["name"]
+        if show_desc and t.get("description"):
+            title += f"  {t['description']}"
+        if show_stack and t.get("stack"):
+            title += f"  [{', '.join(t['stack'])}]"
+        choices.append(questionary.Choice(title=title, value=t["url"]))
+
+    selected = questionary.select("Choose template to pull:", choices=choices).ask()
+    if selected is None:
+        return
+
+    pull_args = Namespace(link=selected, branch=None, recursive=False)
+    _pull(pull_args, data_dir=data_dir)
 
 
 def _sync(args, data_dir):
