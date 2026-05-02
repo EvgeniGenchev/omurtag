@@ -1,8 +1,9 @@
 [project]
 name = "omurtag"
 version = "0.4.1"
-description = ""
+description = "Scaffold projects from personal templates, with a security audit on every create"
 readme = "README.md"
+license = {text = "BSD-3-Clause"}
 requires-python = ">=3.9"
 dependencies = [
     "gitpython>=3.1.46",
@@ -12,6 +13,21 @@ dependencies = [
     "questionary>=2.0.0",
     "tomli>=2.0.0; python_version < '3.11'",
 ]
+classifiers = [
+    "License :: OSI Approved :: BSD License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Environment :: Console",
+    "Topic :: Software Development :: Code Generators",
+]
+
+[project.urls]
+Homepage = "https://evgeni-genchev.com/omurtag/"
+Source = "https://github.com/EvgeniGenchev/omurtag"
 
 [project.scripts]
 omurtag = "omurtag.__main__:main"
