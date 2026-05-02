@@ -6,7 +6,7 @@ function LandingPage({ toolName, tagline, onDonate, onNav }) {
   return (
     <main className="landing" data-screen-label="01 Landing">
       <div className="landing-inner">
-        <div className="eyebrow">V0.3.2 · WTFPL licensed</div>
+        <div className="eyebrow">V0.4.1 · BSD-3-Clause licensed</div>
         <h1 className="hero-title">
           A <em>builder</em> for builders.
         </h1>
@@ -161,7 +161,7 @@ function DocsPage({ toolName }) {
       <article className="docs-main" ref={mainRef}>
         <h1>Documentation</h1>
         <div className="docs-meta">
-          <span>V0.3.2</span>
+          <span>V0.4.1</span>
           <span className="dot">/</span>
           <span>Updated May 2026</span>
           <span className="dot">/</span>
@@ -210,7 +210,7 @@ function AboutPage({ toolName, onNav }) {
       <dl className="factsheet">
         <dt>License</dt><dd>WTFPL</dd>
         <dt>First release</dt><dd>TBD</dd>
-        <dt>Latest</dt><dd>0.3.2</dd>
+        <dt>Latest</dt><dd>0.4.1</dd>
         <dt>Source</dt><dd><a href="https://github.com/EvgeniGenchev/omurtag">github.com/EvgeniGenchev/omurtag</a></dd>
         <dt>Author</dt><dd><a href="https://evgeni-genchev.com">evgeni-genchev.com</a></dd>
         <dt>Contact</dt><dd><a href="mailto:me@evgeni-genchev.com">me@evgeni-genchev.com</a></dd>
