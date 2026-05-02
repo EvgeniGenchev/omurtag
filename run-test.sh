@@ -173,6 +173,20 @@ test_npm_scan() {
     assert_contains    "npm: advisory reported"   "CVE-"            "$out"
 }
 
+# --- cargo security scan: openssl@0.1.0 has CVE-2016-10931 ---
+test_cargo_scan() {
+    echo "--- security scan (openssl@0.1.0) ---"
+    omurtag add tests/fake_cargo_tmpl
+    pname="omurtag_test_cargo"
+    out=$(omurtag create /tmp/$pname -t fake_cargo_tmpl 2>&1)
+
+    assert_path_exists "cargo: project dir"         "/tmp/$pname"
+    assert_contains    "cargo: stack detected"      "Detected stacks" "$out"
+    assert_contains    "cargo: cargo stack"         "cargo"           "$out"
+    assert_contains    "cargo: openssl scanned"     "openssl"         "$out"
+    assert_contains    "cargo: CVE reported"        "CVE-"            "$out"
+}
+
 # --- post-create script: omurtag.sh runs in project dir, not copied ---
 test_script_execution() {
     echo "--- post-create script ---"
@@ -208,6 +222,7 @@ test_neovim
 test_list_verbose
 test_security_scan
 test_npm_scan
+test_cargo_scan
 test_script_execution
 echo ""
 echo "=== $PASS passed, $FAIL failed ==="

@@ -178,7 +178,22 @@ class CargoScanner(DepScanner):
     system = "cargo"
 
     def scan(self, project_path: str, transitive: bool) -> dict[str, list]:
-        raise NotImplementedError
+        p = Path(project_path) / "Cargo.toml"
+        if not p.exists():
+            return {}
+        with open(p, "rb") as f:
+            data = tomllib.load(f)
+        direct = []
+        for section in ("dependencies", "dev-dependencies", "build-dependencies"):
+            for name, constraint in data.get(section, {}).items():
+                if isinstance(constraint, dict):
+                    version = str(constraint.get("version", ""))
+                else:
+                    version = str(constraint)
+                version = _parse_version(version)
+                if version:
+                    direct.append((name, version))
+        return self._collect(direct, transitive)
 
 
 class GoScanner(DepScanner):
