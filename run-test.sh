@@ -159,6 +159,20 @@ test_security_scan() {
     assert_contains    "security: CVE reported"             "CVE-2018-18074"   "$out"
 }
 
+# --- npm security scan: lodash@1.0.0 has known advisories ---
+test_npm_scan() {
+    echo "--- security scan (lodash@1.0.0) ---"
+    omurtag add tests/fake_npm_tmpl
+    pname="omurtag_test_npm"
+    out=$(omurtag create /tmp/$pname -t fake_npm_tmpl 2>&1)
+
+    assert_path_exists "npm: project dir"         "/tmp/$pname"
+    assert_contains    "npm: stack detected"      "Detected stacks" "$out"
+    assert_contains    "npm: npm stack"           "npm"             "$out"
+    assert_contains    "npm: lodash scanned"      "lodash"          "$out"
+    assert_contains    "npm: advisory reported"   "CVE-"            "$out"
+}
+
 # --- post-create script: omurtag.sh runs in project dir, not copied ---
 test_script_execution() {
     echo "--- post-create script ---"
@@ -193,6 +207,7 @@ test_sync
 test_neovim
 test_list_verbose
 test_security_scan
+test_npm_scan
 test_script_execution
 echo ""
 echo "=== $PASS passed, $FAIL failed ==="

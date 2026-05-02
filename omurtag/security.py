@@ -13,8 +13,6 @@ except ImportError:
 from .utils import get_config_value
 
 _BASE = "https://api.deps.dev/v3"
-_PKG_URL = _BASE + "/systems/{system}/packages/{pkg}/versions/{version}"
-_DEPS_URL = _PKG_URL + ":dependencies"
 _ADV_URL = _BASE + "/advisories/{id}"
 
 _STACK_FILES = {
@@ -40,10 +38,19 @@ def _get(url: str):
     return _requests.get(url, timeout=10)
 
 
+def _pkg_url(system: str, pkg: str, version: str, suffix: str = "") -> str:
+    from urllib.parse import quote
+    return (
+        _BASE
+        + f"/systems/{system}/packages/{quote(pkg, safe='')}/versions/{quote(version, safe='')}"
+        + suffix
+    )
+
+
 def _advisories(system: str, pkg: str, version: str) -> list[dict]:
     if not version:
         return []
-    resp = _get(_PKG_URL.format(system=system, pkg=pkg, version=version))
+    resp = _get(_pkg_url(system, pkg, version))
     if resp.status_code != 200:
         return []
     keys = resp.json().get("advisoryKeys", [])
@@ -58,7 +65,7 @@ def _advisories(system: str, pkg: str, version: str) -> list[dict]:
 def _transitive(system: str, pkg: str, version: str) -> list[tuple[str, str]]:
     if not version:
         return []
-    resp = _get(_DEPS_URL.format(system=system, pkg=pkg, version=version))
+    resp = _get(_pkg_url(system, pkg, version, suffix=":dependencies"))
     if resp.status_code != 200:
         return []
     return [
@@ -68,7 +75,11 @@ def _transitive(system: str, pkg: str, version: str) -> list[tuple[str, str]]:
 
 
 def _parse_version(constraint: str) -> str:
-    m = re.search(r"[><=!~^]+\s*([0-9][^\s,;]*)", constraint)
+    s = constraint.strip()
+    m = re.search(r"[><=!~^*]+\s*([0-9][^\s,;]*)", s)
+    if m:
+        return m.group(1)
+    m = re.match(r"^([0-9][^\s,;]*)", s)
     return m.group(1) if m else ""
 
 
@@ -149,7 +160,18 @@ class NpmScanner(DepScanner):
     system = "npm"
 
     def scan(self, project_path: str, transitive: bool) -> dict[str, list]:
-        raise NotImplementedError
+        import json
+        p = Path(project_path) / "package.json"
+        if not p.exists():
+            return {}
+        data = json.loads(p.read_text(encoding="utf-8"))
+        direct = []
+        for section in ("dependencies", "devDependencies"):
+            for name, constraint in data.get(section, {}).items():
+                version = _parse_version(str(constraint))
+                if version:
+                    direct.append((name, version))
+        return self._collect(direct, transitive)
 
 
 class CargoScanner(DepScanner):
@@ -182,10 +204,11 @@ def _print_results(results: dict[str, list]) -> None:
         else:
             print(f"  [red]! {pkg}[/red]")
             for adv in advisories:
-                adv_id = adv.get("advisoryId", {}).get("id", "?")
+                adv_id = adv.get("advisoryKey", {}).get("id", "?")
                 score = adv.get("cvss3Score", "?")
+                aliases = adv.get("aliases", [])
                 print(f"    {adv_id} | cvss3: {score}")
-                for alias in adv.get("aliases", []):
+                for alias in aliases:
                     print(f"      {alias}")
 
 
