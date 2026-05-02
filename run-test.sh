@@ -173,6 +173,20 @@ test_npm_scan() {
     assert_contains    "npm: advisory reported"   "CVE-"            "$out"
 }
 
+# --- go security scan: gopkg.in/yaml.v2@v2.2.2 has CVE-2019-11254 ---
+test_go_scan() {
+    echo "--- security scan (gopkg.in/yaml.v2@v2.2.2) ---"
+    omurtag add tests/fake_go_tmpl
+    pname="omurtag_test_go"
+    out=$(omurtag create /tmp/$pname -t fake_go_tmpl 2>&1)
+
+    assert_path_exists "go: project dir"         "/tmp/$pname"
+    assert_contains    "go: stack detected"      "Detected stacks" "$out"
+    assert_contains    "go: go stack"            "go"              "$out"
+    assert_contains    "go: yaml scanned"        "yaml"            "$out"
+    assert_contains    "go: CVE reported"        "CVE-"            "$out"
+}
+
 # --- cargo security scan: openssl@0.1.0 has CVE-2016-10931 ---
 test_cargo_scan() {
     echo "--- security scan (openssl@0.1.0) ---"
@@ -223,6 +237,7 @@ test_list_verbose
 test_security_scan
 test_npm_scan
 test_cargo_scan
+test_go_scan
 test_script_execution
 echo ""
 echo "=== $PASS passed, $FAIL failed ==="

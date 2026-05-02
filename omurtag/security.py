@@ -200,7 +200,30 @@ class GoScanner(DepScanner):
     system = "go"
 
     def scan(self, project_path: str, transitive: bool) -> dict[str, list]:
-        raise NotImplementedError
+        p = Path(project_path) / "go.mod"
+        if not p.exists():
+            return {}
+        direct = []
+        in_require = False
+        for line in p.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if line.startswith("require ("):
+                in_require = True
+                continue
+            if in_require:
+                if line == ")":
+                    in_require = False
+                    continue
+                line = line.split("//")[0].strip()
+                parts = line.split()
+                if len(parts) >= 2:
+                    direct.append((parts[0], parts[1]))
+            elif line.startswith("require ") and "(" not in line:
+                line = line[len("require "):].split("//")[0].strip()
+                parts = line.split()
+                if len(parts) >= 2:
+                    direct.append((parts[0], parts[1]))
+        return self._collect(direct, transitive)
 
 
 _SCANNERS: dict[str, DepScanner] = {
