@@ -1,6 +1,6 @@
 [project]
 name = "omurtag"
-version = "0.4.3"
+version = "0.4.4"
 description = "Scaffold projects from personal templates, with a security audit on every create"
 readme = "README.md"
 license = {text = "BSD-3-Clause"}
