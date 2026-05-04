@@ -1,5 +1,7 @@
 from pathlib import Path
 from rich import print
+from rich.tree import Tree
+from rich.markup import escape
 try:
     import tomllib
 except ImportError:
@@ -248,19 +250,21 @@ _SCANNERS: dict[str, DepScanner] = {
 }
 
 
-def _print_results(results: dict[str, list]) -> None:
+def _print_results(stack: str, results: dict[str, list]) -> None:
+    tree = Tree(f"[blue]{escape(stack)}[/blue]")
     for pkg, advisories in results.items():
         if not advisories:
-            print(f"  [green]+ {pkg}[/green]")
+            tree.add(f"[green]✓ {escape(pkg)}[/green]")
         else:
-            print(f"  [red]! {pkg}[/red]")
+            branch = tree.add(f"[red]✗ {escape(pkg)}[/red]")
             for adv in advisories:
                 adv_id = adv.get("advisoryKey", {}).get("id", "?")
                 score = adv.get("cvss3Score", "?")
                 aliases = adv.get("aliases", [])
-                print(f"    {adv_id} | cvss3: {score}")
+                adv_branch = branch.add(f"[red]{escape(str(adv_id))}[/red] cvss3: [bold]{score}[/bold]")
                 for alias in aliases:
-                    print(f"      {alias}")
+                    adv_branch.add(f"[dim]{escape(str(alias))}[/dim]")
+    print(tree)
 
 
 def security_check(project_path: str, stacks: list[str]) -> None:
@@ -279,5 +283,4 @@ def security_check(project_path: str, stacks: list[str]) -> None:
         except Exception as e:
             print(f"[yellow]Security scan skipped ({stack}): {e}[/yellow]")
             continue
-        print(f"[blue]Checking {stack} dependencies...[/blue]")
-        _print_results(results)
+        _print_results(stack, results)
