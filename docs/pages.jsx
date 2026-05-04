@@ -6,7 +6,7 @@ function LandingPage({ toolName, tagline, onDonate, onNav }) {
   return (
     <main className="landing" data-screen-label="01 Landing">
       <div className="landing-inner">
-        <div className="eyebrow">V0.4.2 · BSD-3-Clause licensed</div>
+        <div className="eyebrow">V0.4.3 · BSD-3-Clause licensed</div>
         <h1 className="hero-title">
           A <em>builder</em> for builders.
         </h1>
@@ -161,7 +161,7 @@ function DocsPage({ toolName }) {
       <article className="docs-main" ref={mainRef}>
         <h1>Documentation</h1>
         <div className="docs-meta">
-          <span>V0.4.2</span>
+          <span>V0.4.3</span>
           <span className="dot">/</span>
           <span>Updated May 2026</span>
           <span className="dot">/</span>

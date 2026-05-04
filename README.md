@@ -25,7 +25,7 @@ uv tool update-shell
 ## Commands
 
 ```
-omurtag {add,remove,create,list,pull,sync,search}
+omurtag {add,remove,create,list,pull,sync,search,audit}
 
   add      Add a local folder as a template
   remove   Remove a template by name
@@ -34,6 +34,7 @@ omurtag {add,remove,create,list,pull,sync,search}
   pull     Pull a template from a git repo
   sync     Download/update all templates from config
   search   Browse and pull from the community template list
+  audit    Run a security audit on any project directory
 ```
 
 ### Examples
@@ -64,6 +65,10 @@ omurtag remove fastapi_frontend
 
 # sync all templates from config
 omurtag sync
+
+# audit any project directory
+omurtag audit
+omurtag audit ~/projects/myapp
 ```
 
 ## Configuration
