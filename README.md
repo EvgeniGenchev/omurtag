@@ -2,6 +2,9 @@
 
 A builder for a builder. Scaffold projects from personal templates, with a security audit on every create.
 
+<img width="1200" height="720" alt="omurtag" src="https://github.com/user-attachments/assets/3a54bdf0-ad7b-4373-89bd-9ac4c2378db1" />
+
+
 ## Install
 
 ```bash
