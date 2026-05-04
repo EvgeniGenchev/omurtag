@@ -26,6 +26,7 @@ _STACK_FILES = {
     "cargo": ["Cargo.toml"],
     "go": ["go.mod"],
     "maven": ["pom.xml", "build.gradle"],
+    "rubygems": ["Gemfile", "Gemfile.lock"],
 }
 
 
@@ -241,12 +242,38 @@ class GoScanner(DepScanner):
         return self._collect(direct, transitive)
 
 
+class RubyGemsScanner(DepScanner):
+    system = "rubygems"
+
+    def scan(self, project_path: str, transitive: bool) -> dict[str, list]:
+        p = Path(project_path) / "Gemfile.lock"
+        if not p.exists():
+            return {}
+        direct = []
+        in_specs = False
+        for line in p.read_text(encoding="utf-8").splitlines():
+            if line.strip() == "specs:":
+                in_specs = True
+                continue
+            if in_specs:
+                if line == "" or (line[0] != " "):
+                    in_specs = False
+                    continue
+                # direct deps are indented exactly 4 spaces
+                if line.startswith("    ") and not line.startswith("     "):
+                    m = re.match(r"    ([A-Za-z0-9_\-.]+) \(([^)]+)\)", line)
+                    if m:
+                        direct.append((m.group(1), m.group(2)))
+        return self._collect(direct, transitive)
+
+
 _SCANNERS: dict[str, DepScanner] = {
     "python": PypiScanner(),
     "maven": MavenScanner(),
     "npm": NpmScanner(),
     "cargo": CargoScanner(),
     "go": GoScanner(),
+    "rubygems": RubyGemsScanner(),
 }
 
 
