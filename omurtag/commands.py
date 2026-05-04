@@ -78,7 +78,7 @@ def _audit(args):
     if not stacks:
         print("[yellow]No recognized stack found in directory.[/yellow]")
         return
-    security_check(str(path), stacks)
+    security_check(str(path), stacks, short=args.short, only_vulnerable=args.only_vulnerable)
 
 
 def _ensure_data_directory() -> str:

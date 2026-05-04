@@ -201,6 +201,20 @@ test_cargo_scan() {
     assert_contains    "cargo: CVE reported"        "CVE-"            "$out"
 }
 
+# --- rubygems security scan: nokogiri@1.10.0 has 31 CVEs ---
+test_ruby_scan() {
+    echo "--- security scan (nokogiri@1.10.0) ---"
+    omurtag add tests/fake_ruby_tmpl
+    pname="omurtag_test_ruby"
+    out=$(omurtag create /tmp/$pname -t fake_ruby_tmpl 2>&1)
+
+    assert_path_exists "ruby: project dir"         "/tmp/$pname"
+    assert_contains    "ruby: stack detected"      "Detected stacks" "$out"
+    assert_contains    "ruby: rubygems stack"      "rubygems"        "$out"
+    assert_contains    "ruby: nokogiri scanned"    "nokogiri"        "$out"
+    assert_contains    "ruby: CVE reported"        "CVE-"            "$out"
+}
+
 # --- post-create script: omurtag.sh runs in project dir, not copied ---
 test_script_execution() {
     echo "--- post-create script ---"
@@ -238,6 +252,7 @@ test_security_scan
 test_npm_scan
 test_cargo_scan
 test_go_scan
+test_ruby_scan
 test_script_execution
 echo ""
 echo "=== $PASS passed, $FAIL failed ==="

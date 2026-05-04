@@ -126,6 +126,17 @@ def main():
         default=".",
         nargs="?",
     )
+    audit_parser.add_argument(
+        "--short",
+        action="store_true",
+        help="Show package name, version, and status only (no CVE details).",
+    )
+    audit_parser.add_argument(
+        "--only-vulnerable",
+        action="store_true",
+        dest="only_vulnerable",
+        help="Hide packages with no known advisories.",
+    )
 
     args = parser.parse_args()
 

@@ -92,12 +92,12 @@ def _parse_version(constraint: str) -> str:
 class DepScanner:
     system: str
 
-    def scan(self, project_path: str, transitive: bool) -> dict[str, list]:
+    def scan(self, project_path: str, transitive: bool) -> dict[str, tuple[str, list]]:
         raise NotImplementedError
 
     def _collect(
         self, direct: list[tuple[str, str]], transitive: bool
-    ) -> dict[str, list]:
+    ) -> dict[str, tuple[str, list]]:
         seen: set[tuple[str, str]] = set()
         to_check: list[tuple[str, str]] = []
         for pkg, version in direct:
@@ -109,13 +109,13 @@ class DepScanner:
                     if (tp, tv) not in seen:
                         seen.add((tp, tv))
                         to_check.append((tp, tv))
-        return {pkg: _advisories(self.system, pkg, version) for pkg, version in to_check}
+        return {pkg: (version, _advisories(self.system, pkg, version)) for pkg, version in to_check}
 
 
 class PypiScanner(DepScanner):
     system = "pypi"
 
-    def scan(self, project_path: str, transitive: bool) -> dict[str, list]:
+    def scan(self, project_path: str, transitive: bool) -> dict[str, tuple[str, list]]:
         p = Path(project_path)
         direct = []
 
@@ -146,7 +146,7 @@ class PypiScanner(DepScanner):
 class MavenScanner(DepScanner):
     system = "maven"
 
-    def scan(self, project_path: str, transitive: bool) -> dict[str, list]:
+    def scan(self, project_path: str, transitive: bool) -> dict[str, tuple[str, list]]:
         try:
             from lxml import etree as ET  # pyright: ignore
         except ImportError:
@@ -175,7 +175,7 @@ class MavenScanner(DepScanner):
 class NpmScanner(DepScanner):
     system = "npm"
 
-    def scan(self, project_path: str, transitive: bool) -> dict[str, list]:
+    def scan(self, project_path: str, transitive: bool) -> dict[str, tuple[str, list]]:
         import json
         p = Path(project_path) / "package.json"
         if not p.exists():
@@ -193,7 +193,7 @@ class NpmScanner(DepScanner):
 class CargoScanner(DepScanner):
     system = "cargo"
 
-    def scan(self, project_path: str, transitive: bool) -> dict[str, list]:
+    def scan(self, project_path: str, transitive: bool) -> dict[str, tuple[str, list]]:
         p = Path(project_path) / "Cargo.toml"
         if not p.exists():
             return {}
@@ -215,7 +215,7 @@ class CargoScanner(DepScanner):
 class GoScanner(DepScanner):
     system = "go"
 
-    def scan(self, project_path: str, transitive: bool) -> dict[str, list]:
+    def scan(self, project_path: str, transitive: bool) -> dict[str, tuple[str, list]]:
         p = Path(project_path) / "go.mod"
         if not p.exists():
             return {}
@@ -245,7 +245,7 @@ class GoScanner(DepScanner):
 class RubyGemsScanner(DepScanner):
     system = "rubygems"
 
-    def scan(self, project_path: str, transitive: bool) -> dict[str, list]:
+    def scan(self, project_path: str, transitive: bool) -> dict[str, tuple[str, list]]:
         p = Path(project_path) / "Gemfile.lock"
         if not p.exists():
             return {}
@@ -277,24 +277,38 @@ _SCANNERS: dict[str, DepScanner] = {
 }
 
 
-def _print_results(stack: str, results: dict[str, list]) -> None:
+def _print_results(
+    stack: str,
+    results: dict[str, tuple[str, list]],
+    short: bool = False,
+    only_vulnerable: bool = False,
+) -> None:
     tree = Tree(f"[blue]{escape(stack)}[/blue]")
-    for pkg, advisories in results.items():
+    for pkg, (version, advisories) in results.items():
+        if only_vulnerable and not advisories:
+            continue
+        ver_str = f" [dim]{escape(version)}[/dim]" if version else ""
         if not advisories:
-            tree.add(f"[green]✓ {escape(pkg)}[/green]")
+            tree.add(f"[green]✓ {escape(pkg)}[/green]{ver_str}")
         else:
-            branch = tree.add(f"[red]✗ {escape(pkg)}[/red]")
-            for adv in advisories:
-                adv_id = adv.get("advisoryKey", {}).get("id", "?")
-                score = adv.get("cvss3Score", "?")
-                aliases = adv.get("aliases", [])
-                adv_branch = branch.add(f"[red]{escape(str(adv_id))}[/red] cvss3: [bold]{score}[/bold]")
-                for alias in aliases:
-                    adv_branch.add(f"[dim]{escape(str(alias))}[/dim]")
+            branch = tree.add(f"[red]✗ {escape(pkg)}[/red]{ver_str}")
+            if not short:
+                for adv in advisories:
+                    adv_id = adv.get("advisoryKey", {}).get("id", "?")
+                    score = adv.get("cvss3Score", "?")
+                    aliases = adv.get("aliases", [])
+                    adv_branch = branch.add(f"[red]{escape(str(adv_id))}[/red] cvss3: [bold]{score}[/bold]")
+                    for alias in aliases:
+                        adv_branch.add(f"[dim]{escape(str(alias))}[/dim]")
     print(tree)
 
 
-def security_check(project_path: str, stacks: list[str]) -> None:
+def security_check(
+    project_path: str,
+    stacks: list[str],
+    short: bool = False,
+    only_vulnerable: bool = False,
+) -> None:
     if not HAS_REQUESTS:
         print("[yellow]requests not installed, skipping security check[/yellow]")
         return
@@ -310,4 +324,4 @@ def security_check(project_path: str, stacks: list[str]) -> None:
         except Exception as e:
             print(f"[yellow]Security scan skipped ({stack}): {e}[/yellow]")
             continue
-        _print_results(stack, results)
+        _print_results(stack, results, short=short, only_vulnerable=only_vulnerable)
