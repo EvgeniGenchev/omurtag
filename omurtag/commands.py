@@ -64,8 +64,21 @@ def run(args: Namespace):
         _sync(args, data_dir=data_directory)
     elif mode == "search":
         _search(args, data_dir=data_directory)
+    elif mode == "audit":
+        _audit(args)
     else:
         assert False  # this should never happen if argparse works
+
+def _audit(args):
+    path = Path(args.path).resolve()
+    if not path.exists():
+        print(f"[red]{path} not found![/red]")
+        return
+    stacks = detect_stacks(str(path))
+    if not stacks:
+        print("[yellow]No recognized stack found in directory.[/yellow]")
+        return
+    security_check(str(path), stacks)
 
 
 def _ensure_data_directory() -> str:

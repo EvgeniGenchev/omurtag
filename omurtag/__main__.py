@@ -113,6 +113,20 @@ def main():
         formatter_class=RichHelpFormatter,
     )
 
+    audit_parser = subparsers.add_parser(
+        "audit",
+        help="Run a security audit on the current directory.",
+        formatter_class=RichHelpFormatter,
+    )
+    
+    audit_parser.add_argument(
+        "path",
+        type=str,
+        help="Your project directory.",
+        default=".",
+        nargs="?",
+    )
+
     args = parser.parse_args()
 
     if not args.version and args.mode is None:
