@@ -9,9 +9,9 @@ git clone --depth 1 "$REPO" "$TMP/omurtag"
 
 echo "Installing..."
 if command -v uv >/dev/null 2>&1; then
-    uv tool install "$TMP/omurtag"
+    uv tool install --upgrade "$TMP/omurtag"
 elif command -v pip >/dev/null 2>&1; then
-    pip install --user "$TMP/omurtag"
+    pip install --user --upgrade "$TMP/omurtag"
 else
     echo "error: neither uv nor pip found." >&2
     echo "  install uv: curl -LsSf https://astral.sh/uv/install.sh | sh" >&2
