@@ -1,12 +1,12 @@
 [project]
 name = "omurtag"
-version = "0.4.4"
+version = "0.4.5"
 description = "Scaffold projects from personal templates, with a security audit on every create"
 readme = "README.md"
 license = {text = "BSD-3-Clause"}
 requires-python = ">=3.9"
 dependencies = [
-    "gitpython>=3.1.46",
+    "gitpython>=3.1.50",
     "rich-argparse>=1.7.2",
     "tqdm>=4.67.3",
     "requests>=2.33.1",
