@@ -201,6 +201,20 @@ test_cargo_scan() {
     assert_contains    "cargo: CVE reported"        "CVE-"            "$out"
 }
 
+# --- gradle security scan: log4j:log4j:1.2.17 has CVE-2019-17571 ---
+test_gradle_scan() {
+    echo "--- security scan (log4j:log4j:1.2.17) ---"
+    omurtag add tests/fake_gradle_tmpl
+    pname="omurtag_test_gradle"
+    out=$(omurtag create /tmp/$pname -t fake_gradle_tmpl 2>&1)
+
+    assert_path_exists "gradle: project dir"        "/tmp/$pname"
+    assert_contains    "gradle: stack detected"     "Detected stacks" "$out"
+    assert_contains    "gradle: maven stack"        "maven"           "$out"
+    assert_contains    "gradle: log4j scanned"      "log4j"           "$out"
+    assert_contains    "gradle: CVE reported"       "CVE-"            "$out"
+}
+
 # --- rubygems security scan: nokogiri@1.10.0 has 31 CVEs ---
 test_ruby_scan() {
     echo "--- security scan (nokogiri@1.10.0) ---"
@@ -253,6 +267,7 @@ test_npm_scan
 test_cargo_scan
 test_go_scan
 test_ruby_scan
+test_gradle_scan
 test_script_execution
 echo ""
 echo "=== $PASS passed, $FAIL failed ==="

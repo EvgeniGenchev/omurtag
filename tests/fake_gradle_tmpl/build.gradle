@@ -1,0 +1,13 @@
+plugins {
+    id 'java'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'log4j:log4j:1.2.17'
+    implementation "commons-collections:commons-collections:3.2.1"
+    testImplementation 'junit:junit:4.12'
+}
