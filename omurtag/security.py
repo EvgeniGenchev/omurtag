@@ -25,7 +25,7 @@ _STACK_FILES = {
     "npm": ["package.json"],
     "cargo": ["Cargo.toml"],
     "go": ["go.mod"],
-    "maven": ["pom.xml", "build.gradle"],
+    "maven": ["pom.xml", "build.gradle", "build.gradle.kts"],
     "rubygems": ["Gemfile", "Gemfile.lock"],
 }
 
@@ -146,20 +146,40 @@ class PypiScanner(DepScanner):
 class MavenScanner(DepScanner):
     system = "maven"
 
+    _GRADLE_CONFIGS = (
+        "implementation|api|compile|compileOnly|runtimeOnly|"
+        "testImplementation|testCompile|testRuntimeOnly|"
+        "annotationProcessor|kapt|classpath|developmentOnly"
+    )
+
     def scan(self, project_path: str, transitive: bool) -> dict[str, tuple[str, list]]:
+        p = Path(project_path)
+        pom = p / "pom.xml"
+        gradle = p / "build.gradle"
+        gradle_kts = p / "build.gradle.kts"
+
+        if pom.exists():
+            direct = self._parse_pom(pom)
+        elif gradle.exists():
+            direct = self._parse_gradle(gradle)
+        elif gradle_kts.exists():
+            direct = self._parse_gradle(gradle_kts)
+        else:
+            return {}
+
+        return self._collect(direct, transitive)
+
+    def _parse_pom(self, pom: Path) -> list[tuple[str, str]]:
         try:
             from lxml import etree as ET  # pyright: ignore
         except ImportError:
             print("[yellow]lxml not installed, skipping Maven scan[/yellow]")
-            return {}
-        p = Path(project_path) / "pom.xml"
-        if not p.exists():
-            return {}
-        tree = ET.parse(str(p), ET.XMLParser(recover=True))
+            return []
+        tree = ET.parse(str(pom), ET.XMLParser(recover=True))
         deps = tree.getroot().find("dependencies")
         if deps is None:
-            return {}
-        direct = []
+            return []
+        direct: list[tuple[str, str]] = []
         for dep in deps:
             try:
                 gid = dep.find("groupId").text
@@ -169,7 +189,21 @@ class MavenScanner(DepScanner):
                 direct.append((f"{gid}:{aid}", version or ""))
             except AttributeError:
                 pass
-        return self._collect(direct, transitive)
+        return direct
+
+    def _parse_gradle(self, path: Path) -> list[tuple[str, str]]:
+        text = path.read_text(encoding="utf-8")
+        pattern = re.compile(
+            rf"^\s*(?:{self._GRADLE_CONFIGS})\s*\(?\s*['\"]([^'\"]+)['\"]",
+            re.MULTILINE,
+        )
+        direct: list[tuple[str, str]] = []
+        for m in pattern.finditer(text):
+            parts = m.group(1).split(":")
+            if len(parts) >= 3:
+                gid, aid, ver = parts[0], parts[1], parts[2]
+                direct.append((f"{gid}:{aid}", ver))
+        return direct
 
 
 class NpmScanner(DepScanner):
