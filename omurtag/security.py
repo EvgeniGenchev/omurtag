@@ -185,24 +185,43 @@ class MavenScanner(DepScanner):
                 gid = dep.find("groupId").text
                 aid = dep.find("artifactId").text
                 vn = dep.find("version")
-                version = vn.text if vn is not None else ""
-                direct.append((f"{gid}:{aid}", version or ""))
+                raw = vn.text if vn is not None else ""
+                version = _parse_version(raw or "")
+                if version:
+                    direct.append((f"{gid}:{aid}", version))
             except AttributeError:
                 pass
         return direct
 
     def _parse_gradle(self, path: Path) -> list[tuple[str, str]]:
         text = path.read_text(encoding="utf-8")
-        pattern = re.compile(
+        direct: list[tuple[str, str]] = []
+
+        str_pattern = re.compile(
             rf"^\s*(?:{self._GRADLE_CONFIGS})\s*\(?\s*['\"]([^'\"]+)['\"]",
             re.MULTILINE,
         )
-        direct: list[tuple[str, str]] = []
-        for m in pattern.finditer(text):
+        for m in str_pattern.finditer(text):
             parts = m.group(1).split(":")
             if len(parts) >= 3:
                 gid, aid, ver = parts[0], parts[1], parts[2]
-                direct.append((f"{gid}:{aid}", ver))
+                v = _parse_version(ver)
+                if v:
+                    direct.append((f"{gid}:{aid}", v))
+
+        map_pattern = re.compile(
+            rf"^\s*(?:{self._GRADLE_CONFIGS})\s+"
+            r"group\s*:\s*['\"]([^'\"]+)['\"]"
+            r"\s*,\s*name\s*:\s*['\"]([^'\"]+)['\"]"
+            r"\s*,\s*version\s*:\s*['\"]([^'\"]+)['\"]",
+            re.MULTILINE,
+        )
+        for m in map_pattern.finditer(text):
+            gid, aid, ver = m.group(1), m.group(2), m.group(3)
+            v = _parse_version(ver)
+            if v:
+                direct.append((f"{gid}:{aid}", v))
+
         return direct
 
 
